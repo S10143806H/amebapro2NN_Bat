@@ -1,8 +1,12 @@
+# readme python -m PyInstaller --onefile -w .\updatemodel_tool.py 
+# -w: no terminal required
+
 import os
 import sys
 import shutil
 import json
-
+import subprocess
+import tempfile
 from datetime import datetime, timezone
 
 # declear common file paths
@@ -30,7 +34,7 @@ def backupModel():
     for file_model in os.listdir(dest_path):
         if file_model.endswith(".nb"):
             if "backup" in file_model:
-                print(f"Backuped Model {file_model} has found !!!")
+                print(f"INFO: Backuped Model {file_model} has found !!!")
                 break
             else:
                 if file_user_model in file_model:
@@ -43,13 +47,13 @@ def backupModel():
                     print("Last modified: ", datetime.fromtimestamp(file_model_stats.st_mtime, tz = timezone.utc).strftime('%Y-%m-%d %H:%M:%S'))
                     print("Mode:          ", oct(file_model_stats.st_mode))
                     print("--------------------------")
-                    print("Backup starts....")
+                    print("INFO: Backup starts....")
                     # Backup model
                     file_model_modified = "backup_" + datetime.fromtimestamp(file_model_stats.st_mtime, tz = timezone.utc).strftime('%Y-%m-%d') + "_" + file_model
                     os.rename(os.path.join(dest_path, file_model), os.path.join(dest_path, file_model_modified))
-                    print("Backup done.")
+                    print("INFO: Backup done.")
                     shutil.copy(usrmodel_path + "\\" + file_user_model, dest_path)
-                    print("User model copied.")
+                    print("INFO: User model copied.")
                 else:  
                     continue
 
@@ -107,9 +111,9 @@ def updateJSON(option, user_model=None):
             with open(os.path.join(dest_path, file_json), "w") as file:
                 json.dump(data, file, indent=4)
             if option == 0:
-                print('JSON file reverted to default successfully.')
+                print('INFO: JSON file reverted to default successfully.')
             else:
-                print('JSON file updated successfully.')
+                print('INFO: JSON file updated successfully.')
 
 def get_user_input():
     """
@@ -128,24 +132,41 @@ def get_user_input():
         print("1. Input user model")
         print("2. Use default settings")
         print("--------------------------")
-        choice = input("Enter option number: ")
-        print("--------------------------")
+        if len(sys.argv) > 1:
+            # User has provided input, so we can access it
+            user_input = sys.argv[1]
+            print(f"User input: {user_input}")
+        else:
+            # User has not provided input, so we prompt them to do so
+            print("Error: Please provide input.")
+            user_input = input("> ")
+            print(f"User input: {user_input}")
+            
+    # while True:
+    #     print("--------------------------")
+    #     print("Please select an option:")
+    #     print("1. Input user model")
+    #     print("2. Use default settings")
+    #     print("--------------------------")
+    #     print("Enter option number: ")
         
-        if choice == "1":
+
+        # choice = sys.argv[1] # user model or default
+
+        if user_input == "1":
             print("--------------------------")
-            print("Input user model:")
-            print("1. Yolov3")
-            print("2. Yolov4")
-            print("3. Yolov7")
-            print("4. Yolov4")
-            print("5. Yolov4")
-            print("--------------------------")
-            choice = input("Enter option number: ")
-            print("--------------------------")
+            # print("Input user model:")
+            # print("1. Yolov3")
+            # print("2. Yolov4")
+            # print("3. Yolov7")
+            # print("4. FD")
+            # print("5. FR")
+            # print("--------------------------")
+            # subchoice1 = input("Enter option number: ")
             backupModel()
             updateJSON(1)
             break
-        elif choice == "2":
+        elif user_input == "2":
             # Use default settings
             updateJSON(0)
             break
@@ -160,7 +181,10 @@ if __name__ == '__main__':
     print("===== [MAIN Function] =====")
 
     get_user_input()                    # display menu
+
+
     
+
 
 #################################################################
 # TODO: multi model support
