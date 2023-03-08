@@ -1,4 +1,6 @@
-# readme python -m PyInstaller --onefile -w .\updatemodel_tool.py 
+# readme 
+# python -m PyInstaller --onefile .\updatemodel_tool.py 
+# python3 -m PyInstaller --onefile .\updatemodel_tool.py 
 # -w: no terminal required
 
 import os
@@ -8,21 +10,37 @@ import json
 import subprocess
 import tempfile
 from datetime import datetime, timezone
+from sys import platform
 
 # declear common file paths
 usrmodel_path = os.path.abspath(os.path.dirname(sys.argv[0]))
 for file_user_model in os.listdir(usrmodel_path):
     if file_user_model.endswith(".nb"):
-        # print(os.path.join(usrmodel_path, file_user_model))
-        # Get the file name without the file type extension
-        file_user_model_no_ext = os.path.splitext(os.path.basename(file_user_model))[0]
+#         print(os.path.join(usrmodel_path, file_user_model))
+         # Get the file name without the file type extension
+         file_user_model_no_ext = os.path.splitext(os.path.basename(file_user_model))[0]
+         print(file_user_model_no_ext)
 
-# LINUX "~/.arduino15"
-arduino15_path = os.path.expanduser("~\AppData\Local\Arduino15")
-ambpro2_path = arduino15_path + "\packages\\realtek\hardware\AmebaPro2\\"
-sdk_version = os.listdir(ambpro2_path)[0]
-dest_path = ambpro2_path + "\\" + sdk_version + "\\variants\common_nn_models"
-print(dest_path)
+if platform == "linux" or platform == "linux2":
+    # linux
+    arduino15_path = os.path.expanduser("/home/" + os.getlogin() + "/.arduino15")
+    ambpro2_path = arduino15_path + "/packages/realtek/hardware/AmebaPro2/"
+    sdk_version = os.listdir(ambpro2_path)[0]
+    dest_path = ambpro2_path + "/" + sdk_version + "/variants/common_nn_models"
+elif platform == "darwin":
+    # OS X
+    arduino15_path = os.path.expanduser("/Users/" + os.getlogin() + "/Library/Arduino15")
+    ambpro2_path = arduino15_path + "/packages/realtek/hardware/AmebaPro2/"
+    sdk_version = os.listdir(ambpro2_path)[1]
+    dest_path = ambpro2_path + "/" + sdk_version + "/variants/common_nn_models"
+elif platform == "win32":
+    # Windows...
+    arduino15_path = os.path.expanduser("~\AppData\Local\Arduino15")
+    ambpro2_path = arduino15_path + "\packages\\realtek\hardware\AmebaPro2\\"
+    sdk_version = os.listdir(ambpro2_path)[0]
+    dest_path = ambpro2_path + "\\" + sdk_version + "\\variants\common_nn_models"
+#print(sdk_version)
+#print(dest_path)
 
 def backupModel():
     """
@@ -183,10 +201,8 @@ if __name__ == '__main__':
     get_user_input()                    # display menu
 
 
-    
-
-
 #################################################################
-# TODO: multi model support
-# TODO: model size check
-# TODO: arduino.ino YOLOMODEL
+# TODO: support 3 OS [DONE]
+# TODO: multi model support []
+# TODO: model size check []
+# TODO: arduino.ino YOLOMODEL []
