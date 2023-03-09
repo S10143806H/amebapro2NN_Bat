@@ -107,8 +107,8 @@ recipe.hooks.sketch.prebuild.1.pattern.linux = {runtime.tools.ameba_pro2_tools.p
 recipe.hooks.sketch.prebuild.1.pattern.macosx = {runtime.tools.ameba_pro2_tools.path}/prebuild_macos {toolchain.path} {toolchain_version_p1} {toolchain_version_p2}
 
 recipe.hooks.sketch.prebuild.2.pattern.windows = {runtime.tools.ameba_pro2_tools.path}/updatemodel_tool.exe {build.nn_od_model}
-# recipe.hooks.sketch.prebuild.2.pattern.linux   = {runtime.tools.ameba_pro2_tools.path}/updatemodel_tool_linux 1 {build.nn_od_model}
-# recipe.hooks.sketch.prebuild.2.pattern.macosx  = {runtime.tools.ameba_pro2_tools.path}/updatemodel_tool_macos 1 {build.nn_od_model}
+recipe.hooks.sketch.prebuild.2.pattern.linux   = {runtime.tools.ameba_pro2_tools.path}/updatemodel_tool_linux {build.nn_od_model}
+recipe.hooks.sketch.prebuild.2.pattern.macosx  = {runtime.tools.ameba_pro2_tools.path}/updatemodel_tool_macos {build.nn_od_model}
 
 #recipe.hooks.sketch.prebuild.2.pattern.windows = {runtime.tools.ameba_pro2_tools.path}/updatemodel_tool.exe {build.nn_fd_model}
 # recipe.hooks.sketch.prebuild.2.pattern.linux   = {runtime.tools.ameba_pro2_tools.path}/updatemodel_tool_linux 1 {build.nn_fd_model}

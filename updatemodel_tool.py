@@ -13,12 +13,11 @@ import re
 from datetime import datetime, timezone
 from sys import platform
 
-DEBUG= False
+DEBUG= True
 
 def debug_print(message):
     if DEBUG:
         print(message)
-
 
 # declear common file paths
 usrmodel_path = os.path.abspath(os.path.dirname(sys.argv[0]))
@@ -28,10 +27,35 @@ for file_user_model in os.listdir(usrmodel_path):
         # Get the file name without the file type extension recursively
         file_user_model_no_ext = os.path.splitext(os.path.basename(file_user_model))[0]
         #  debug_print(file_user_model_no_ext)
+# if platform == "win32":
+#     # Windows...
+#     arduino15_path = os.path.expanduser("~\AppData\Local\Arduino15")
+#     ambpro2_path = arduino15_path + "\packages\\realtek\hardware\AmebaPro2"
+#     sdk_version = os.listdir(ambpro2_path)[0]
+#     dest_path = ambpro2_path + "\\" + sdk_version + "\\variants\common_nn_models"
+# elif platform == "linux" or platform == "linux2":
+#     # linux
+#     arduino15_path = os.path.expanduser("/home/" + os.getlogin() + "/.arduino15")
+#     ambpro2_path = arduino15_path + "/packages/realtek/hardware/AmebaPro2/"
+#     sdk_version = os.listdir(ambpro2_path)[0]
+#     dest_path = ambpro2_path + "/" + sdk_version + "/variants/common_nn_models"
+# elif platform == "darwin":
+#     # OS X
+#     arduino15_path = os.path.expanduser("/Users/" + os.getlogin() + "/Library/Arduino15")
+#     ambpro2_path = arduino15_path + "/packages/realtek/hardware/AmebaPro2/"
+#     sdk_version = os.listdir(ambpro2_path)[1]
+#     dest_path = ambpro2_path + "/" + sdk_version + "/variants/common_nn_models"
 
-if platform == "linux" or platform == "linux2":
+if platform == "win32":
+    # Windows...
+    arduino15_path = os.path.expanduser("~\AppData\Local\Arduino15")
+    ambpro2_path = arduino15_path + "\packages\\realtek\hardware\AmebaPro2"
+    sdk_version = os.listdir(ambpro2_path)[0]
+    dest_path = ambpro2_path + "\\" + sdk_version + "\\variants\common_nn_models"
+elif platform == "linux" or platform == "linux2":
     # linux
     arduino15_path = os.path.expanduser("/home/" + os.getlogin() + "/.arduino15")
+    ambpro2_path = ambpro2_path.replace("\\", "/")
     ambpro2_path = arduino15_path + "/packages/realtek/hardware/AmebaPro2/"
     sdk_version = os.listdir(ambpro2_path)[0]
     dest_path = ambpro2_path + "/" + sdk_version + "/variants/common_nn_models"
@@ -41,19 +65,40 @@ elif platform == "darwin":
     ambpro2_path = arduino15_path + "/packages/realtek/hardware/AmebaPro2/"
     sdk_version = os.listdir(ambpro2_path)[1]
     dest_path = ambpro2_path + "/" + sdk_version + "/variants/common_nn_models"
-elif platform == "win32":
-    # Windows...
-    arduino15_path = os.path.expanduser("~\AppData\Local\Arduino15")
-    ambpro2_path = arduino15_path + "\packages\\realtek\hardware\AmebaPro2"
-    sdk_version = os.listdir(ambpro2_path)[0]
-    dest_path = ambpro2_path + "\\" + sdk_version + "\\variants\common_nn_models"
 #debug_print(sdk_version)
 #debug_print(dest_path)
 
-# allowed keys
-allowed_values = ["CYV3", "CYV4", "CYV7", "CM", "CS", "DYV3", "DYV4", "DYV7", "DM", "DS"]
-allowed_Dvalues = []
+model_mapping = {
+    "CYV3": "yolov3_tiny",
+    "CYV4": "yolov4_tiny",
+    "CYV7": "yolov7_tiny",
+    "CM": "mobilefacenet_i8",
+    "CS": "scrfd320p",
+    "DYV3": "yolov3_tiny",
+    "DYV4": "yolov4_tiny",
+    "DYV7": "yolov7_tiny",
+    "DM": "mobilefacenet_i8",
+    "DS": "scrfd320p"
+}
 
+allowed_values = ["CYV3", "CYV4", "CYV7", "CM", "CS", "DYV3", "DYV4", "DYV7", "DM", "DS"]
+
+def backupModel():
+    print("TODO")
+
+def dspFileProp(filename):
+    file_model_stats = os.stat(filename)
+    file_model_datetime = datetime.fromtimestamp(file_model_stats.st_mtime, tz = timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+    file_model_date = datetime.fromtimestamp(file_model_stats.st_mtime, tz = timezone.utc).strftime('%Y-%m-%d')
+    file_model_mode = oct(file_model_stats.st_mode)
+    debug_print("              FILE INFO")
+    debug_print("------------------------------------------")
+    debug_print(f"Size:          {file_model_stats.st_size}")
+    debug_print(f"Last modified: {file_model_datetime}")
+    debug_print(f"Mode:          {file_model_mode}")
+    debug_print("------------------------------------------")
+    return file_model_date
+   
 def backupModel(user_model):
     """
     Check user model whether exists.
@@ -61,18 +106,9 @@ def backupModel(user_model):
     Returns:
     None
     """
-    if user_model == "CYV3" or user_model == "DYV3":
-        file_user_model_no_ext = "yolov3_tiny"
-    elif user_model == "CYV4" or user_model == "DYV4":
-        file_user_model_no_ext = "yolov4_tiny"
-    elif user_model == "CYV7"or user_model == "DYV7":
-        file_user_model_no_ext = "yolov7_tiny"
-    elif user_model == "CM" or user_model == "DM" :
-        file_user_model_no_ext = "mobilefacenet_i8"
-    elif user_model == "CS" or user_model == "DS":
-        file_user_model_no_ext = "scrfd320p"
-    debug_print(file_user_model_no_ext)
-    
+    # convert user parameter into model name
+    file_user_model_no_ext = model_mapping.get(user_model)
+    # debug_print(file_user_model_no_ext)
     for file_model in os.listdir(dest_path):
         if file_model.endswith(".nb"):
             # debug_print(file_model)
@@ -83,11 +119,20 @@ def backupModel(user_model):
                 file_model_reverted = file_model.split("_", 2)[2]
                 debug_print(file_model_reverted)
                 # TODO delete copied user file
-                os.remove(dest_path + "\\" + file_model_reverted)
-                debug_print("INFO: User model deleted.")
+                if os.path.exists(dest_path + "/" + file_model_reverted):
+                    if platform == "linux" or platform == "linux2" or platform == "darwin" : 
+                        # linux & OS X
+                        os.remove(dest_path + "/" + file_model_reverted)
+                    elif platform == "win32":
+                        # Windows...
+                        os.remove(dest_path + "\\" + file_model_reverted)
+                else:
+                    debug_print("Error: Cannot find model file")
+                
+                debug_print("[INFO] User model deleted.")
                 # TODO rename backuped model back to normal
                 os.rename(os.path.join(dest_path, file_model), os.path.join(dest_path, file_model_reverted))
-                debug_print("INFO: Revert done.")
+                debug_print("[INFO] Revert done.")
                 break
             else:
                 if file_user_model_no_ext in file_model:
@@ -96,21 +141,30 @@ def backupModel(user_model):
                     debug_print(f"Model {file_model} contains the keyword {file_user_model} has found !!!")
                     # Get file properties
                     if os.path.exists(file_user_model_no_ext + ".nb"):
-                        file_model_stats = os.stat(file_user_model_no_ext + ".nb")
-                        file_model_datetime = datetime.fromtimestamp(file_model_stats.st_mtime, tz = timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
-                        file_model_mode = oct(file_model_stats.st_mode)
-                        debug_print("--------------------------")
-                        debug_print("Size:          {file_model_stats.st_size}")
-                        debug_print("Last modified: {file_model_datetime}")
-                        debug_print("Mode:          {file_model_mode}")
-                        debug_print("--------------------------")
-                        debug_print("INFO: Backup starts....")
-                        # Backup model
-                        file_model_modified = "backup_" + datetime.fromtimestamp(file_model_stats.st_mtime, tz = timezone.utc).strftime('%Y-%m-%d') + "_" + file_model
+                        debug_print("[INFO] Backup starts ....")
+                        # Backup Dmodel
+                        file_model_modified = "Dbackup_" + dspFileProp(file_user_model) + "_" + file_model
                         os.rename(os.path.join(dest_path, file_model), os.path.join(dest_path, file_model_modified))
-                        debug_print("INFO: Backup done.")
+                        debug_print("[INFO] Dmodel Backup done.")
+                        
+                        # Copy Cmodel
+                        if platform == "linux" or platform == "linux2" or platform == "darwin" : 
+                            # linux & OS X
+                            shutil.copy(usrmodel_path + "/" + file_user_model, dest_path)
+                        # elif platform == "darwin":
+                        #     # OS X
+                        elif platform == "win32":
+                            # Windows...
+                            shutil.copy(usrmodel_path + "\\" + file_user_model, dest_path)
+                        debug_print("[INFO] User model copied.")
+                        # Backup Cmodel
+                        debug_print(file_user_model)
+                        
+                        file_model_modified = "Cbackup_" + dspFileProp(file_user_model) + "_" + file_model
+                        # debug_print(file_model_modified)
+                        os.rename(os.path.join(dest_path, file_model), os.path.join(dest_path, file_model_modified))
+                        debug_print("[INFO] Cmodel Backup done.")
                         shutil.copy(usrmodel_path + "\\" + file_user_model, dest_path)
-                        debug_print("INFO: User model copied.")
                     else:
                         debug_print(f"The file {file_user_model_no_ext}.nb does not exist.")
                 else:  
@@ -170,12 +224,12 @@ def updateJSON(option, user_model):
             with open(os.path.join(dest_path, file_json), "w") as file:
                 json.dump(data, file, indent=4)
             if option == 0:
-                debug_print('INFO: JSON file reverted to default successfully.')
+                debug_print('[INFO] JSON file reverted to default successfully.')
             else:
-                debug_print('INFO: JSON file updated successfully.')
+                debug_print('[INFO] JSON file updated successfully.')
 
 
-def get_user_input():
+def get_user_input_origin():
     """
     Displays a menu and prompts the user to select an option.
 
@@ -264,29 +318,37 @@ def get_user_input():
             debug_print("Invalid choice. Please enter 1 or 2.")
             break
 
+def dsp_user_menu():
+    options = [
+        ("CYV3", "Customize Yolov3"),
+        ("CYV4", "Customize Yolov4"),
+        ("CYV7", "Customize Yolov7"),
+        ("CM", "Customize MobileFaceNet"),
+        ("CS", "Customize SCRFD"),
+        ("DYV3", "Default Yolov3"),
+        ("DYV4", "Default Yolov4"),
+        ("DYV7", "Default Yolov7"),
+        ("DM", "Default MobileFaceNet"),
+        ("DS", "Default SCRFD")
+    ]
+    debug_print("--------------------------")
+    debug_print("Input user model:")
+    for option in options[:5]:
+        debug_print(f"{option[0]}: {option[1]}")
+    debug_print("--------------------------")
+    debug_print("Input default model:")
+    for option in options[5:]:
+        debug_print(f"{option[0]}: {option[1]}")
+    debug_print("--------------------------")
+    debug_print("Enter your option: ")
 
-def get_user_input2():
+def get_user_input():
     """
     Displays a menu and prompts the user to select an option.
     """
-    user_input_flag = 0
-    while user_input_flag == 0:
-        debug_print("--------------------------")
-        debug_print("Input user model:")
-        debug_print("CYV3: Customize Yolov3")
-        debug_print("CYV4: Customize Yolov4")
-        debug_print("CYV7: Customize Yolov7")
-        debug_print("CM: Customize MobileFaceNet")
-        debug_print("CS: Customize SCRFD")
-        debug_print("--------------------------")
-        debug_print("Input default model:")
-        debug_print("DYV3: Default Yolov3")
-        debug_print("DYV4: Default Yolov4")
-        debug_print("DYV7: Default Yolov7")
-        debug_print("DM: Default MobileFaceNet")
-        debug_print("DS: Default SCRFD")
-        debug_print("--------------------------")
-        debug_print("Enter your option: ")
+    user_input_flag = False
+    while user_input_flag == False:
+        dsp_user_menu()
         if len(sys.argv) > 1:
             # User has provided input, so we can access it
             user_input_sub1 = sys.argv[1]
@@ -294,7 +356,7 @@ def get_user_input2():
             user_input_flag = True
             if user_input_sub1 in allowed_values:
                 backupModel(user_input_sub1)
-                updateJSON(1, user_input_sub1) 
+        #         updateJSON(1, user_input_sub1) 
             else:
                 debug_print("Invalid choice. Please enter valid user model.")
             break
@@ -305,18 +367,17 @@ def get_user_input2():
             user_input_flag = True
             if user_input_sub1 in allowed_values:
                 backupModel(user_input_sub1)
-                updateJSON(1, user_input_sub1) 
-                break
+        #         updateJSON(1, user_input_sub1) 
             else:
                 debug_print("Invalid choice. Please enter valid user model.")
-                break
+            break
 
 #####################################################################################
 # Main Function
 # Default script location: tools/
 #####################################################################################
 if __name__ == '__main__':
-    get_user_input2()                            # display menu
+    get_user_input()
     # input("Press Enter to leave the terminal")
 
 #################################################################
