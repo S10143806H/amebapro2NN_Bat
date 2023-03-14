@@ -99,7 +99,7 @@ def backupModel(user_model):
     # backup Cmodel
     if platform == "linux" or platform == "linux2" or platform == "darwin" : 
             # linux & OS X
-        shutil.copy(usrmodel_path + "/" + file_user_model, dest_path)
+        shutil.copy(usrmodel_path + "/" + input2model(user_model) + ".nb", dest_path)
     #                     # elif platform == "darwin":
     #                     #     # OS X
     elif platform == "win32":
@@ -111,7 +111,7 @@ def backupModel(user_model):
     # copy Cmodel
     if platform == "linux" or platform == "linux2" or platform == "darwin" : 
             # linux & OS X
-        shutil.copy(usrmodel_path + "/" + file_user_model, dest_path)
+        shutil.copy(usrmodel_path + "/" + input2model(user_model) + ".nb", dest_path)
     #                     # elif platform == "darwin":
     #                     #     # OS X
     elif platform == "win32":
@@ -139,8 +139,6 @@ def revertModel(user_model):
 def updateJSON(input):
     for file_json in os.listdir(dest_path):
         if file_json.endswith(".json"):
-            debug_print(file_json)
-            debug_print(input2model(input))
             with open(os.path.join(dest_path, file_json), "r+") as file:
                 data = json.load(file)
                 if input == 'RESET':
@@ -201,12 +199,13 @@ def validationCheck(input):
     if input in allowed_values:
         if input[0] == 'C':
             # convert input to model
-            input = input2model(input) + ".nb"
-            if os.path.isfile(input):
+            folderValidationCheck()
+            if os.path.isfile(input2model(input) + ".nb"):
                 debug_print(f"[INFO] Customized Model {input} Found!")
                 return 1
             else:
                 debug_print(f"[Error] Model {input} NOT Found! Please check your input again.")
+                raise SystemExit
         if input[0] == 'D':
             debug_print(f"[INFO] Default Model is being selected!")
             return 0
@@ -216,7 +215,7 @@ def validationCheck(input):
         debug_print("[Error] Please enter a valid input.")
         raise SystemExit
 
-if __name__ == '__main__':
+def folderValidationCheck():
     # TODO: customized folder validation
     if not os.path.exists(ameba_model_path):
         print("The AmebaModel folder does not exist on the desktop.")
@@ -225,12 +224,11 @@ if __name__ == '__main__':
         if not os.listdir(ameba_model_path):
             print("The AmebaModel folder is empty.")
             raise SystemExit
-        else:
-            debug_print("The AmebaModel folder is not empty.")
     
+if __name__ == '__main__':
     user_input_flag = False
     while user_input_flag == False:
-        dspMenu()
+        #dspMenu()
         if len(sys.argv) > 1:
             # User has provided input, so we can access it
             user_input_sub1 = sys.argv[1]
