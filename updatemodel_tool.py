@@ -1,8 +1,8 @@
-# readme 
-# python -m PyInstaller --onefile .\updatemodel_tool.py 
+# python -m PyInstaller  --onefile .\updatemodel_tool.py 
 # python3 -m PyInstaller --onefile .\updatemodel_tool.py 
-# -w: no terminal required 
+#                        -w: no terminal required 
 # Run: updatemodel_tool.exe EMPTY/DYV4
+# Linux Permission Denied: chmod +x myapp ls -l myapp
 
 import os
 import sys
