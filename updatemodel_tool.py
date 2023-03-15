@@ -11,7 +11,7 @@ import json
 from datetime import datetime, timezone
 from sys import platform
 
-DEBUG = False
+DEBUG = 0
 def debug_print(message):
     if DEBUG:
         print(message)
@@ -21,7 +21,6 @@ usrmodel_path = os.path.abspath(os.path.dirname(sys.argv[0]))
 for file_user_model in os.listdir(usrmodel_path):
     if file_user_model.endswith(".nb"):
         # debug_print(os.path.join(usrmodel_path, file_user_model))
-        # Get the file name without the file type extension recursively
         file_user_model_no_ext = os.path.splitext(os.path.basename(file_user_model))[0]
         # debug_print(file_user_model_no_ext)
 
@@ -60,7 +59,6 @@ allowed_values = [
 ]
 
 def dspFileProp(filename):
-    print(dest_path + filename)
     file_model_stats = os.stat(dest_path + filename)
     file_model_datetime = datetime.fromtimestamp(file_model_stats.st_mtime, tz = timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
     file_model_date = datetime.fromtimestamp(file_model_stats.st_mtime, tz = timezone.utc).strftime('%Y-%m-%d')
@@ -90,13 +88,12 @@ def renameFile(filename, type):
         debug_print("[INFO] Cmodel Backup done.")
 
 def backupModel(user_model):
-    debug_print("[INFO] Backup Default Model: " + input2model(user_model) + ".nb")
-
+    # backup Dmodel
     for dest_file in os.listdir(dest_path):
         if "Dbackup" in dest_file:
-            debug_print(f"[INFO] Backup Default Model {user_model} found !!!")
-        elif input2model(user_model) in dest_file:
-            renameFile(input2model(user_model) + ".nb", 1)
+            debug_print(f"[INFO] Backup-ed {input2model(user_model)}.nb found !!!")
+            break
+    renameFile(input2model(user_model) + ".nb", 1)
     
     # backup Cmodel
     if platform == "linux" or platform == "linux2" or platform == "darwin" : 
@@ -105,7 +102,6 @@ def backupModel(user_model):
     elif platform == "win32":
         # Windows...
         shutil.copy(ameba_model_path + "\\" + input2model(user_model) + ".nb", dest_path)
-    debug_print(input2model(user_model) + ".nb")
     renameFile(input2model(user_model) + ".nb", 0)
 
     # copy Cmodel
@@ -228,11 +224,9 @@ if __name__ == '__main__':
     while user_input_flag == False:
         #dspMenu()
         if len(sys.argv) > 1:
-            # User has provided input, so we can access it
             user_input_sub1 = sys.argv[1]
             debug_print(f"User input: {user_input_sub1}")
         else:
-            # User has not provided input, so we prompt them to do so
             user_input_sub1 = input("Please provide a valid input > ")
             debug_print(f"User input: {user_input_sub1}")
         user_input_flag = True
@@ -251,6 +245,5 @@ if __name__ == '__main__':
                 backupModel(user_input_sub1)
             else:
                 revertModel(user_input_sub1)
-    
     updateJSON(user_input_sub1) 
     # input("Press Enter to leave the terminal")
