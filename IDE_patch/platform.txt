@@ -110,17 +110,17 @@ recipe.hooks.sketch.prebuild.2.pattern.windows = {runtime.tools.ameba_pro2_tools
 recipe.hooks.sketch.prebuild.2.pattern.linux   = {runtime.tools.ameba_pro2_tools.path}/updatemodel_tool_linux RESET
 recipe.hooks.sketch.prebuild.2.pattern.macosx  = {runtime.tools.ameba_pro2_tools.path}/updatemodel_tool_macos RESET
 
-recipe.hooks.sketch.prebuild.2.pattern.windows = {runtime.tools.ameba_pro2_tools.path}/updatemodel_tool.exe   {build.nn_od_model}
-recipe.hooks.sketch.prebuild.2.pattern.linux   = {runtime.tools.ameba_pro2_tools.path}/updatemodel_tool_linux {build.nn_od_model}
-recipe.hooks.sketch.prebuild.2.pattern.macosx  = {runtime.tools.ameba_pro2_tools.path}/updatemodel_tool_macos {build.nn_od_model}
+recipe.hooks.sketch.prebuild.3.pattern.windows = {runtime.tools.ameba_pro2_tools.path}/updatemodel_tool.exe   {build.nn_od_model}
+recipe.hooks.sketch.prebuild.3.pattern.linux   = {runtime.tools.ameba_pro2_tools.path}/updatemodel_tool_linux {build.nn_od_model}
+recipe.hooks.sketch.prebuild.3.pattern.macosx  = {runtime.tools.ameba_pro2_tools.path}/updatemodel_tool_macos {build.nn_od_model}
 
-recipe.hooks.sketch.prebuild.2.pattern.windows = {runtime.tools.ameba_pro2_tools.path}/updatemodel_tool.exe   {build.nn_fd_model}
-recipe.hooks.sketch.prebuild.2.pattern.linux   = {runtime.tools.ameba_pro2_tools.path}/updatemodel_tool_linux {build.nn_fd_model}
-recipe.hooks.sketch.prebuild.2.pattern.macosx  = {runtime.tools.ameba_pro2_tools.path}/updatemodel_tool_macos {build.nn_fd_model}
+recipe.hooks.sketch.prebuild.4.pattern.windows = {runtime.tools.ameba_pro2_tools.path}/updatemodel_tool.exe   {build.nn_fd_model}
+recipe.hooks.sketch.prebuild.4.pattern.linux   = {runtime.tools.ameba_pro2_tools.path}/updatemodel_tool_linux {build.nn_fd_model}
+recipe.hooks.sketch.prebuild.4.pattern.macosx  = {runtime.tools.ameba_pro2_tools.path}/updatemodel_tool_macos {build.nn_fd_model}
 
-recipe.hooks.sketch.prebuild.2.pattern.windows = {runtime.tools.ameba_pro2_tools.path}/updatemodel_tool.exe   {build.nn_fr_model}
-recipe.hooks.sketch.prebuild.2.pattern.linux   = {runtime.tools.ameba_pro2_tools.path}/updatemodel_tool_linux {build.nn_fr_model}
-recipe.hooks.sketch.prebuild.2.pattern.macosx  = {runtime.tools.ameba_pro2_tools.path}/updatemodel_tool_macos {build.nn_fr_model}
+recipe.hooks.sketch.prebuild.5.pattern.windows = {runtime.tools.ameba_pro2_tools.path}/updatemodel_tool.exe   {build.nn_fr_model}
+recipe.hooks.sketch.prebuild.5.pattern.linux   = {runtime.tools.ameba_pro2_tools.path}/updatemodel_tool_linux {build.nn_fr_model}
+recipe.hooks.sketch.prebuild.5.pattern.macosx  = {runtime.tools.ameba_pro2_tools.path}/updatemodel_tool_macos {build.nn_fr_model}
 
 # Ameba compile patterns
 # ---------------------
@@ -128,7 +128,7 @@ recipe.hooks.sketch.prebuild.2.pattern.macosx  = {runtime.tools.ameba_pro2_tools
 recipe.c.o.pattern="{compiler.path}{compiler.c.cmd}" {compiler.c.flags} -MD -MT -MF -c {compiler.defines.c.flags} -DF_CPU={build.f_cpu} -DARDUINO={runtime.ide.version} -DARDUINO_{build.board} -DARDUINO_ARCH_{build.arch} {build.extra_flags} -Wl,--start-group {compiler.ameba.c.include} {compiler.arduino.c.include} {includes} -Wl,--end-group "{source_file}" -o "{object_file}"
 
 ## Compile c++ files
-recipe.cpp.o.pattern="{compiler.path}{compiler.cpp.cmd}" {compiler.cpp.flags} -MD -MT -MF -c {compiler.defines.cpp.flags} -DF_CPU={build.f_cpu} -DARDUINO={runtime.ide.version} -DARDUINO_{build.board} -DARDUINO_ARCH_{build.arch} {build.extra_flags} -Wl,--start-group {compiler.ameba.c.include} {compiler.arduino.c.include} {includes} -Wl,--end-group "{source_file}" -o "{object_file}"
+recipe.cpp.o.pattern="{compiler.path}{compiler.cpp.cmd}" {compiler.cpp.flags} -c {compiler.defines.cpp.flags} -DF_CPU={build.f_cpu} -DARDUINO={runtime.ide.version} -DARDUINO_{build.board} -DARDUINO_ARCH_{build.arch} {build.extra_flags} -Wl,--start-group {compiler.ameba.c.include} {compiler.arduino.c.include} {includes} -Wl,--end-group "{source_file}" -o "{object_file}"
 ###-fno-exceptions
 
 ## Create archives
