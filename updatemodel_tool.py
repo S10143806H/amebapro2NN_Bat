@@ -140,6 +140,29 @@ def updateJSON(input):
                 data["FWFS"]["files"].append(input2model(input))
             with open(os.path.join(dest_path, file_json), "w") as file:
                 json.dump(data, file, indent=4)
+    validateJSON()
+
+def validateJSON():
+    total_size = 0
+    limit_size = 0
+    counter = 0
+    for file_json in os.listdir(dest_path):
+        if file_json.endswith(".json"):
+            with open(os.path.join(dest_path, file_json), "r+") as file:
+                data = json.load(file)
+                files_dict = data["FWFS"]["files"]
+                for value in files_dict:
+                    debug_print(f"{value}"+ ".nb")
+                    debug_print(os.stat(dest_path + value + ".nb").st_size)
+                    total_size += os.stat(dest_path + value + ".nb").st_size
+                    limit_size += 4194304
+                    counter += 1
+                debug_print("---------")
+                debug_print(total_size)
+                debug_print(limit_size)
+    if total_size > limit_size and counter > 1:
+        sys.stderr.write(f"[Error] Model size is too big! Please check your input again.\n")
+        sys.exit(1)
 
 def dspMenu():
     options = [
