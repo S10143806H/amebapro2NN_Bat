@@ -1,7 +1,14 @@
+# Readme
+# This tool is automatically update amebapro2_fwfs_nn_models.json based on user selections in Arduino IDE Tools menu
+# ------------------------------------------------------
+# To generate executable
 # python -m PyInstaller  --onefile .\updatemodel_tool.py 
-# python3 -m PyInstaller --onefile .\updatemodel_tool.py 
+# python3 -m PyInstaller --onefile ./updatemodel_tool.py 
 #                        -w: no terminal required 
-# Run: updatemodel_tool.exe EMPTY/DYV4
+# ------------------------------------------------------
+# To run 
+# updatemodel_tool.exe EMPTY/DYV4
+# ------------------------------------------------------
 # Linux Permission Denied: chmod +x myapp ls -l myapp
 
 import os
@@ -11,7 +18,7 @@ import json
 from datetime import datetime, timezone
 from sys import platform
 
-DEBUG = 1
+DEBUG = 0
 def debug_print(message):
     if DEBUG:
         print(message)
