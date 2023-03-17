@@ -11,7 +11,7 @@ import json
 from datetime import datetime, timezone
 from sys import platform
 
-DEBUG = 0
+DEBUG = 1
 def debug_print(message):
     if DEBUG:
         print(message)
@@ -53,8 +53,8 @@ elif platform == "darwin":
     dest_path = ambpro2_path + "/" + sdk_version + "/variants/common_nn_models/"
 
 allowed_values = [
-    "CYV3", "CYV4", "CYV7", "CM8", "CM16", "CS32", "CS64", 
-    "DYV3", "DYV4", "DYV7", "DM8", "DM16", "DS32", "DS64",
+    "CYV3", "CYV4", "CYV7", "CM16", "CS64", # "CM8", "CS32", 
+    "DYV3", "DYV4", "DYV7", "DM16", "DS64", # "DM8", "DS32", 
     "YVNo", "SNo", "MNo"
 ]
 
@@ -72,7 +72,6 @@ def dspFileProp(filename):
     return file_model_date
 
 def renameFile(filename, type):
-    debug_print(dspFileProp(filename))
     if type == 1:
         # Backup Dmodel
         filename_modified = "Dbackup_" + dspFileProp(filename) + "_" + filename
@@ -93,24 +92,25 @@ def backupModel(user_model):
         if "Dbackup" in dest_file:
             debug_print(f"[INFO] Backup-ed {input2model(user_model)}.nb found !!!")
             break
-    renameFile(input2model(user_model) + ".nb", 1)
+    
+    renameFile(input2filename(user_input_sub1), 1)
     
     # backup Cmodel
     if platform == "linux" or platform == "linux2" or platform == "darwin" : 
         # linux & OS X
-        shutil.copy(ameba_model_path + "/" + input2model(user_model) + ".nb", dest_path)
+        shutil.copy(ameba_model_path + "/" + input2filename(user_input_sub1), dest_path)
     elif platform == "win32":
         # Windows...
-        shutil.copy(ameba_model_path + "\\" + input2model(user_model) + ".nb", dest_path)
-    renameFile(input2model(user_model) + ".nb", 0)
+        shutil.copy(ameba_model_path + "\\" + input2filename(user_input_sub1), dest_path)
+    renameFile(input2filename(user_input_sub1), 0)
 
     # copy Cmodel
     if platform == "linux" or platform == "linux2" or platform == "darwin" : 
         # linux & OS X
-        shutil.copy(ameba_model_path + "/" + input2model(user_model) + ".nb", dest_path)
+        shutil.copy(ameba_model_path + "/" + input2filename(user_input_sub1), dest_path)
     elif platform == "win32":
         # Windows...
-        shutil.copy(ameba_model_path + "\\" + input2model(user_model) + ".nb", dest_path)
+        shutil.copy(ameba_model_path + "\\" + input2filename(user_input_sub1), dest_path)
     debug_print("[INFO] User model copied.")
 
 def revertModel(user_model):
@@ -152,9 +152,9 @@ def validateJSON():
                 data = json.load(file)
                 files_dict = data["FWFS"]["files"]
                 for value in files_dict:
-                    debug_print(f"{value}"+ ".nb")
-                    debug_print(os.stat(dest_path + value + ".nb").st_size)
-                    total_size += os.stat(dest_path + value + ".nb").st_size
+                    value_file_path = dest_path + data[value]["file"]
+                    debug_print(value_file_path)
+                    total_size += os.stat(value_file_path).st_size
                     limit_size += 4194304
                     counter += 1
                 debug_print("---------")
@@ -197,20 +197,28 @@ def input2model(input):
         "CYV3": "yolov3_tiny",
         "CYV4": "yolov4_tiny",
         "CYV7": "yolov7_tiny",
-        "CM8": "mobilefacenet_i8",
+        # "CM8": "mobilefacenet_i8",
         "CM16": "mobilefacenet_i16",
-        "CS32": "scrfd320p",
+        # "CS32": "scrfd320p",
         "CS64": "scrfd640",
         "DYV3": "yolov3_tiny",
         "DYV4": "yolov4_tiny",
         "DYV7": "yolov7_tiny",
-        "DM8": "mobilefacenet_i8",
+        # "DM8": "mobilefacenet_i8",
         "DM16": "mobilefacenet_i16",
-        "DS32": "scrfd320p",
+        # "DS32": "scrfd320p",
         "DS64": "scrfd640"
     }
     model = model_mapping.get(input)
     return model
+
+def input2filename(input):
+    for file_json in os.listdir(dest_path):
+        if file_json.endswith(".json"):
+            with open(os.path.join(dest_path, file_json), "r+") as file:
+                data = json.load(file)
+                value_file = data[input2model(input)]["file"]
+    return value_file
 
 def folderValidationCheck():
     # TODO: customized folder validation
@@ -227,11 +235,11 @@ def validationCheck(input):
         if input[0] == 'C':
             # convert input to model
             folderValidationCheck()
-            if os.path.isfile(ameba_model_path + input2model(input) + ".nb"):
-                debug_print(f"[INFO] Customized Model {input2model(input)} Found!")
+            if os.path.isfile(ameba_model_path + input2filename(input)):
+                debug_print(f"[INFO] Customized Model {input2filename(input)} Found!")
                 return 1
             else:
-                sys.stderr.write(f"[Error] Model {input2model(input)} NOT Found! Please check your input again.\n")
+                sys.stderr.write(f"[Error] Customized Model {input2filename(input)} NOT Found! Please check your input again.\n")
                 sys.exit(1)
         if input[0] == 'D':
             debug_print(f"[INFO] Default Model is being selected!")
@@ -239,7 +247,7 @@ def validationCheck(input):
         else:
             raise SystemExit
     else:
-        # debug_print("[Error] Please enter a valid input.\n")
+        debug_print("[Error] Invalid input.\n")
         raise SystemExit
 
 if __name__ == '__main__':
