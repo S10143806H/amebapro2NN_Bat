@@ -20,7 +20,7 @@ import json
 from datetime import datetime, timezone
 from sys import platform
 
-DEBUG = 0
+DEBUG = 1
 def debug_print(message):
     if DEBUG:
         print(message)
@@ -260,7 +260,24 @@ def validationCheck(input):
             with open(os.path.join(input, file_json), "r+") as file:
                 data = json.load(file)
                 example_path = data["sketchLocation"]
+                # Arduino IDE2.0 
+                if "Arduino15" not in example_path: 
+                    example_name = example_path.split("\\")[-1]
+                    debug_print(f"Current example running: {example_name}")
+                
+                    for file_cache in os.listdir(input):
+                        if file_cache.endswith(".cache") and "libraries" in file_cache:
+                            with open(os.path.join(input, file_cache), "r+") as file:
+                                for library_path in json.loads(file.read()):
+                                    if "libraries" in library_path:
+                                        library_path = library_path + "\\..\\examples\\"
+                                        debug_print(os.listdir(library_path))
+                                        if example_name in os.listdir(library_path):
+                                            example_path = library_path + example_name + "\\" + example_name + ".ino"
+                                            debug_print(example_path)
                 sktech_path  = example_path + "\.."
+                
+                # Arduino IDE1.0 
                 with open(example_path, 'r+') as file:
                     lines = file.readlines()
                     
