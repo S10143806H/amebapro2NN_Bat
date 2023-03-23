@@ -1,4 +1,5 @@
-# Readme
+# ------------------------------------------------------
+# README
 # This tool is to check whether correct model has being selected in Arduino IDE Tools menu while running dedicated NN example
 # For Example: whether scrfd and mobilefacenet models have been selected while running NNFaceRecognition Example
 # ------------------------------------------------------
@@ -20,7 +21,7 @@ import json
 from datetime import datetime, timezone
 from sys import platform
 
-DEBUG = 1
+DEBUG = 0
 def debug_print(message):
     if DEBUG:
         print(message)
@@ -280,50 +281,63 @@ def validationCheck(input):
                 # Arduino IDE1.0 
                 with open(example_path, 'r+') as file:
                     lines = file.readlines()
-                    
+                    updateTXT("----------------------------------")
+                    updateTXT("Current ino contains model(s):")
                     for line in lines:
-                        if not line.startswith("//") and keyword in line:
+                        if "//" not in line and keyword in line:
                             input_param = re.search(r'\((.*?)\)', line).group(1)
                             if input_param != "":
                                 debug_print(f"Current input using: {input_param.split(',')}")
+                                input = input_param.split(',')
                                 model_type = input_param.split(',')[0]
                                 model = input_param.split(',')[1:]
+                                if model_type == "OBJECT_DETECTION" and not model:
+                                    input.extend(['DEFAULT_YOLOV4TINY', 'NA_MODEL', 'NA_MODEL'])
+                                    debug_print(f"NEW input using: {input}")
+                                if model_type == "FACE_DETECTION" and not model:
+                                    input.extend(['NA_MODEL', 'DEFAULT_SCRFD', 'NA_MODEL'])
+                                    debug_print(f"NEW input using: {input}")
+                                if model_type == "FACE_RECOGNITION" and not model:
+                                    input.extend(['NA_MODEL', 'DEFAULT_SCRFD', 'DEFAULT_MOBILEFACENET'])
+                                    debug_print(f"NEW input using: {input}")
+                                model_type = input[0]
+                                model = input[1:]
 
-                                # check whetehr input parameters are in correct sequence
-                                if model_type == "OBJECT_DETECTION" and "NA_MODEL" in input_param.split(',')[1] or model_type == "OBJECT_DETECTION" and "YOLO" not in input_param.split(',')[1] or model_type == "FACE_DETECTION" and "NA_MODEL" in input_param.split(',')[2] or model_type == "FACE_DETECTION" and "SCRFD" not in input_param.split(',')[2] or model_type == "FACE_RECOGNITION" and "NA_MODEL" in input_param.split(',')[2] or model_type == "FACE_RECOGNITION" and "NA_MODEL" in input_param.split(',')[3] or model_type == "FACE_RECOGNITION" and "SCRFD" not in input_param.split(',')[2] or model_type == "FACE_RECOGNITION" and "MOBILEFACENET" not in input_param.split(',')[3]:
-                                    sys.stderr.write(f"[Error] Model mismatch. Please check modelSelect() again.\n")
-                                    sys.exit(1)
+                                debug_print(f"MODEL using: {model}")
+                                if not (model_type != "" and not model):
+                                    # check whether input parameters are in correct sequence
+                                    if model_type == "OBJECT_DETECTION" and "NA_MODEL" in input[1] or model_type == "OBJECT_DETECTION" and "YOLO" not in input[1] or model_type == "FACE_DETECTION" and "NA_MODEL" in input[2] or model_type == "FACE_DETECTION" and "SCRFD" not in input[2] or model_type == "FACE_RECOGNITION" and "NA_MODEL" in input[2] or model_type == "FACE_RECOGNITION" and "NA_MODEL" in input[3] or model_type == "FACE_RECOGNITION" and "SCRFD" not in input[2] or model_type == "FACE_RECOGNITION" and "MOBILEFACENET" not in input[3]:
+                                        sys.stderr.write(f"[Error] Model mismatch. Please check modelSelect() again.\n")
+                                        sys.exit(1)
 
-                            updateTXT("----------------------------------")
-                            updateTXT("Current ino contains model(s):")
-                            for model_item in model:
-                                if model_item != "":
-                                    debug_print(f"Current model using: {input2model(model_item.strip())}")
-                                    
-                                    if keyword_customized in model_item.strip():
-                                        files = os.listdir(sktech_path)
-                                        nb_files = [file for file in files if file.endswith('nb')]
-                                        # check whether customized model exists
-                                        if len(nb_files) == 0:
-                                            sys.stderr.write(f"[Error] Model not found. Please check your sketch folder again.\n")
-                                            sys.exit(1)
-                                        else:
-                                            # check model naming convension
-                                            if input2filename(input2model(model_item.strip())) not in nb_files:
-                                                resetJSON(dest_path)
-                                                resetTXT()
-                                                sys.stderr.write(f"[Error] Customized model {input2filename(input2model(model_item.strip()))} not found. Please check your sketch folder again.\n")
-                                                sys.exit(1)
+                                    for model_item in model:
+                                        if model_item != "":
+                                            debug_print(f"Current model using: {input2model(model_item.strip())}")
+                                            
+                                            if keyword_customized in model_item.strip():
+                                                files = os.listdir(sktech_path)
+                                                nb_files = [file for file in files if file.endswith('nb')]
+                                                # check whether customized model exists
+                                                if len(nb_files) == 0:
+                                                    sys.stderr.write(f"[Error] Model not found. Please check your sketch folder again.\n")
+                                                    sys.exit(1)
+                                                else:
+                                                    # check model naming convension
+                                                    if input2filename(input2model(model_item.strip())) not in nb_files:
+                                                        resetJSON(dest_path)
+                                                        resetTXT()
+                                                        sys.stderr.write(f"[Error] Customized model {input2filename(input2model(model_item.strip()))} not found. Please check your sketch folder again.\n")
+                                                        sys.exit(1)
 
-                                        backupModel(input2filename(input2model(model_item.strip())), sktech_path)
-                                    else:
-                                        if model_item.strip() != "NA_MODEL":
-                                            revertModel(input2filename(input2model(model_item.strip())))
+                                                backupModel(input2filename(input2model(model_item.strip())), sktech_path)
+                                            else:
+                                                if model_item.strip() != "NA_MODEL":
+                                                    revertModel(input2filename(input2model(model_item.strip())))
 
-                                    # default add in at least one model for NN examples
-                                    if input2model(model_item.strip()) != None:
-                                        updateJSON(input2model(model_item.strip()))
-                                        updateTXT(input2model(model_item.strip()))
+                                            # default add in at least one model for NN examples
+                                        if input2model(model_item.strip()) != None:
+                                            updateJSON(input2model(model_item.strip()))
+                                            updateTXT(input2model(model_item.strip()))
 
                     updateTXT("-----------------------------------")
                     updateTXT("Current NN header file(s): ")
