@@ -66,6 +66,7 @@ elif platform == "darwin":
     dest_path = ambpro2_path + "/" + sdk_version + "/variants/common_nn_models/"
     filepath_txt = sys.argv[2] + '/misc/' + filename_txt
 
+
 def resetJSON(input):
     for file_json in os.listdir(input):
         if file_json.endswith(".json"):
@@ -91,27 +92,37 @@ def updateJSON(input):
                 json.dump(data, file, indent=4)
     # validateJSON()
 
-# def validateJSON():
-#     total_size = 0
-#     limit_size = 0
-#     counter = 0
-#     for file_json in os.listdir(dest_path):
-#         if file_json.endswith(".json"):
-#             with open(os.path.join(dest_path, file_json), "r+") as file:
-#                 data = json.load(file)
-#                 files_dict = data["FWFS"]["files"]
-#                 for value in files_dict:
-#                     value_file_path = dest_path + data[value]["file"]
-#                     debug_print(value_file_path)
-#                     total_size += os.stat(value_file_path).st_size
-#                     limit_size += 4194304
-#                     counter += 1
-#                 debug_print("---------")
-#                 debug_print(total_size)
-#                 debug_print(limit_size)
-#     if total_size > limit_size and counter > 1:
-#         sys.stderr.write(f"[Error] Model size is too big! Please check your input again.\n")
-#         sys.exit(1)
+def validateJSON():
+    total_size = 0
+    limit_size = 0
+    counter = 0
+    for file_json in os.listdir(dest_path):
+        if file_json.endswith(".json"):
+            with open(os.path.join(dest_path, file_json), "r+") as file:
+                data = json.load(file)
+                files_dict = data["FWFS"]["files"]
+                for value in files_dict:
+                    value_file_path = dest_path + data[value]["file"]
+                    debug_print(value_file_path)
+                    total_size += os.stat(value_file_path).st_size
+                    limit_size += 4194304
+                    counter += 1
+                debug_print("---------")
+                debug_print(total_size)
+                debug_print(limit_size)
+    if total_size > limit_size and counter > 1:
+        sys.stderr.write(f"[Error] Model size is too big! Please check your input again.\n")
+        sys.exit(1)
+
+def dupCheckJSON(input):
+    for file_json in os.listdir(dest_path):
+        if file_json.endswith(".json"):
+            with open(os.path.join(dest_path, file_json), "r") as file:
+                data = json.load(file)
+                if input2model(input) not in data["FWFS"]["files"]:
+                    return 1
+    return 0
+
 
 def resetTXT():
     # filepath_txt = sys.argv[2] + '\\misc\\' + filename_txt
@@ -153,6 +164,12 @@ def updateNATXT(filepath, start_line, end_line):
             file.writelines(lines)
     else:
         raise ValueError("Start or end line not found in the file")
+
+def dupCheckTXT(input):
+    with open(filepath_txt,'r') as file:
+        if input2model(input) not in file.read():
+            return 1
+    return 0
 
 
 def input2model(input):
@@ -254,12 +271,14 @@ def revertModel(input):
             os.rename(os.path.join(dest_path, dest_file), os.path.join(dest_path, file_model_reverted))
             debug_print(f"[INFO] Revert {input} done.")
 
+
 def validationCheck(input):
     # check current running ino
     for file_json in os.listdir(input):
         if file_json.endswith(".json") and "build" in file_json:
             with open(os.path.join(input, file_json), "r+") as file:
                 data = json.load(file)
+                # Arduino IDE1.0 
                 example_path = data["sketchLocation"]
                 # Arduino IDE2.0 
                 if "Arduino15" not in example_path: 
@@ -278,7 +297,6 @@ def validationCheck(input):
                                             debug_print(example_path)
                 sktech_path  = example_path + "\.."
                 
-                # Arduino IDE1.0 
                 with open(example_path, 'r+') as file:
                     lines = file.readlines()
                     updateTXT("----------------------------------")
@@ -288,25 +306,22 @@ def validationCheck(input):
                             input_param = re.search(r'\((.*?)\)', line).group(1)
                             if input_param != "":
                                 debug_print(f"Current input using: {input_param.split(',')}")
-                                input = input_param.split(',')
+                                params = input_param.split(',') # params
                                 model_type = input_param.split(',')[0]
                                 model = input_param.split(',')[1:]
+                                # update params
                                 if model_type == "OBJECT_DETECTION" and not model:
-                                    input.extend(['DEFAULT_YOLOV4TINY', 'NA_MODEL', 'NA_MODEL'])
-                                    debug_print(f"NEW input using: {input}")
+                                    params.extend(['DEFAULT_YOLOV4TINY', 'NA_MODEL', 'NA_MODEL'])
                                 if model_type == "FACE_DETECTION" and not model:
-                                    input.extend(['NA_MODEL', 'DEFAULT_SCRFD', 'NA_MODEL'])
-                                    debug_print(f"NEW input using: {input}")
+                                    params.extend(['NA_MODEL', 'DEFAULT_SCRFD', 'NA_MODEL'])
                                 if model_type == "FACE_RECOGNITION" and not model:
-                                    input.extend(['NA_MODEL', 'DEFAULT_SCRFD', 'DEFAULT_MOBILEFACENET'])
-                                    debug_print(f"NEW input using: {input}")
-                                model_type = input[0]
-                                model = input[1:]
+                                    params.extend(['NA_MODEL', 'DEFAULT_SCRFD', 'DEFAULT_MOBILEFACENET'])
+                                model_type = params[0]
+                                model = params[1:]
 
-                                debug_print(f"MODEL using: {model}")
                                 if not (model_type != "" and not model):
                                     # check whether input parameters are in correct sequence
-                                    if model_type == "OBJECT_DETECTION" and "NA_MODEL" in input[1] or model_type == "OBJECT_DETECTION" and "YOLO" not in input[1] or model_type == "FACE_DETECTION" and "NA_MODEL" in input[2] or model_type == "FACE_DETECTION" and "SCRFD" not in input[2] or model_type == "FACE_RECOGNITION" and "NA_MODEL" in input[2] or model_type == "FACE_RECOGNITION" and "NA_MODEL" in input[3] or model_type == "FACE_RECOGNITION" and "SCRFD" not in input[2] or model_type == "FACE_RECOGNITION" and "MOBILEFACENET" not in input[3]:
+                                    if model_type == "OBJECT_DETECTION" and "NA_MODEL" in model[0] or model_type == "OBJECT_DETECTION" and "YOLO" not in model[0] or model_type == "FACE_DETECTION" and "NA_MODEL" in model[1] or model_type == "FACE_DETECTION" and "SCRFD" not in model[1] or model_type == "FACE_RECOGNITION" and "NA_MODEL" in model[1] or model_type == "FACE_RECOGNITION" and "NA_MODEL" in model[2] or model_type == "FACE_RECOGNITION" and "SCRFD" not in model[1] or model_type == "FACE_RECOGNITION" and "MOBILEFACENET" not in model[2]:
                                         sys.stderr.write(f"[Error] Model mismatch. Please check modelSelect() again.\n")
                                         sys.exit(1)
 
@@ -333,11 +348,13 @@ def validationCheck(input):
                                             else:
                                                 if model_item.strip() != "NA_MODEL":
                                                     revertModel(input2filename(input2model(model_item.strip())))
-
-                                            # default add in at least one model for NN examples
+                                        
+                                        # default add in at least one model for NN examples
                                         if input2model(model_item.strip()) != None:
-                                            updateJSON(input2model(model_item.strip()))
-                                            updateTXT(input2model(model_item.strip()))
+                                            if dupCheckJSON(model_item.strip()):
+                                                updateJSON(input2model(model_item.strip()))
+                                            if dupCheckTXT(model_item.strip()):
+                                                updateTXT(input2model(model_item.strip()))
 
                     updateTXT("-----------------------------------")
                     updateTXT("Current NN header file(s): ")
@@ -366,13 +383,13 @@ def main(param1, param2):
     user_input_flag = False
     while user_input_flag == False:
         if len(sys.argv) > 1:
-            user_input_sub1 = sys.argv[1]
+            user_input1 = sys.argv[1]
         else:
-            user_input_sub1 = input("Please provide a valid input > ")
+            user_input1 = input("Please provide a valid input > ")
         user_input_flag = True
         resetTXT()
         resetJSON(dest_path)
-        validationCheck(user_input_sub1)
+        validationCheck(user_input1)
 
 if __name__ == '__main__':
     if len(sys.argv) == 3:
