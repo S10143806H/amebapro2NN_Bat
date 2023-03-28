@@ -19,7 +19,7 @@ import json
 from datetime import datetime, timezone
 from sys import platform
 
-DEBUG = 0
+DEBUG = 1
 def debug_print(message):
     if DEBUG:
         print(message)
@@ -30,6 +30,8 @@ keyword_customized = "CUSTOMIZED"
 keyword_default = "DEFAULT"
 keyword_default_backup = "Dbackup"
 keyword_customized_backup = "Cbackup"
+keyword_bypass1 = " .modelSelect"
+keyword_bypass2 = " modelSelect"
 
 filename_txt = "ino_validation.txt"
 
@@ -230,11 +232,10 @@ def validationINO():
                                         if example_name in os.listdir(library_path):
                                             example_path = library_path + example_name + os.path.sep + example_name + ".ino"
                                             debug_print(f"[INFO] Current example_path: {example_path}")
-                debug_print(f"[INFO] Current example {example_name} running in: {example_path}")
+                    debug_print(f"[INFO] Current example {example_name} running in: {example_path}")
     return example_path
 
 def writeJSON(example_path):
-    # check current running ino
     for file_json in os.listdir(sys.argv[1]):
         if file_json.endswith(".json") and "build" in file_json:
             with open(os.path.join(sys.argv[1], file_json), "r+") as file:
@@ -242,7 +243,7 @@ def writeJSON(example_path):
                     sktech_path  = example_path + os.path.sep + ".."
                     lines = file.readlines()
                     for line in lines:
-                        if "//" not in line and keyword in line:
+                         if "//" not in line and keyword in line and not keyword_bypass1 in line and not keyword_bypass2 in line:
                             input_param = re.search(r'\((.*?)\)', line).group(1)
                             if input_param != "":
                                 debug_print(f"Current input using: {input_param.split(',')}")

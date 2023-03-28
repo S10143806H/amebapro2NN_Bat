@@ -16,7 +16,7 @@ import sys
 import json
 from sys import platform
 
-DEBUG = 0
+DEBUG = 1
 def debug_print(message):
     if DEBUG:
         print(message)
@@ -27,6 +27,8 @@ keyword_customized = "CUSTOMIZED"
 keyword_default = "DEFAULT"
 keyword_default_backup = "Dbackup"
 keyword_customized_backup = "Cbackup"
+keyword_bypass1 = " .modelSelect"
+keyword_bypass2 = " modelSelect"
 
 filename_txt = "ino_validation.txt"
 
@@ -93,13 +95,15 @@ def updateNATXT(filepath, start_line, end_line):
         content_between_lines = lines[start_line_index + 1:end_line_index]
         is_empty = all(line.strip() == '' for line in content_between_lines)
         if is_empty:
-            lines.insert(start_line_index + 1, "NA\n")
+            lines.insert(start_line_index + 1, "NA\nNA\nNA\n")
         with open(filepath, 'w') as file:
             file.writelines(lines)
     else:
         raise ValueError("Start or end line not found in the file")
 
 def dupCheckTXT(input):
+    if input == "NA":
+        return 1
     with open(filepath_txt,'r') as file:
         if input2model(input) not in file.read():
             return 1
@@ -120,6 +124,23 @@ def input2model(input):
     }
     model = model_mapping.get(input)
     return model
+
+def input2header(input):
+    header_mapping = {
+        "yolov3_tiny"               : "NNObjectDetection.h",
+        "yolov4_tiny"               : "NNObjectDetection.h",
+        "yolov7_tiny"               : "NNObjectDetection.h",
+        "mobilefacenet_i16"         : "NNFaceDetectionRecognition.h",
+        "scrfd640"                  : "NNFaceDetection.h",
+        "yolov3_tiny"               : "NNObjectDetection.h",
+        "yolov4_tiny"               : "NNObjectDetection.h",
+        "yolov7_tiny"               : "NNObjectDetection.h",
+        "mobilefacenet_i8"          : "NNFaceDetectionRecognition.h",
+        "scrfd320p"                 : "NNFaceDetection.h",
+        "None"                      : "NA"
+    }
+    header = header_mapping.get(input)
+    return header
 
 def input2filename(input):
     if os.path.isdir(dest_path):
@@ -162,6 +183,8 @@ def validationINO():
                     debug_print(f"[INFO] Current example {example_name} running in: {example_path}")
     return example_path
 
+model_list = []
+
 def writeTXT(example_path):
     for file_json in os.listdir(sys.argv[1]):
         if file_json.endswith(".json") and "build" in file_json:
@@ -172,7 +195,7 @@ def writeTXT(example_path):
                     updateTXT("----------------------------------")
                     updateTXT("Current ino contains model(s):")
                     for line in lines:
-                        if "//" not in line and keyword in line:
+                        if "//" not in line and keyword in line and not keyword_bypass1 in line and not keyword_bypass2 in line:
                             input_param = re.search(r'\((.*?)\)', line).group(1)
                             if input_param != "":
                                 debug_print(f"Current input using: {input_param.split(',')}")
@@ -194,11 +217,11 @@ def writeTXT(example_path):
                                     if model_type == "OBJECT_DETECTION" and "NA_MODEL" in model[0] or model_type == "OBJECT_DETECTION" and "YOLO" not in model[0] or model_type == "FACE_DETECTION" and "NA_MODEL" in model[1] or model_type == "FACE_DETECTION" and "SCRFD" not in model[1] or model_type == "FACE_RECOGNITION" and "NA_MODEL" in model[1] or model_type == "FACE_RECOGNITION" and "NA_MODEL" in model[2] or model_type == "FACE_RECOGNITION" and "SCRFD" not in model[1] or model_type == "FACE_RECOGNITION" and "MOBILEFACENET" not in model[2]:
                                         sys.stderr.write(f"[Error] Model mismatch. Please check modelSelect() again.\n")
                                         sys.exit(1)
-
+                                    
                                     for model_item in model:
                                         if model_item != "":
                                             debug_print(f"Current model using: {input2model(model_item.strip())}")
-                                            
+                                            model_list.append(input2model(model_item.strip()))
                                             if keyword_customized in model_item.strip():
                                                 files = os.listdir(sktech_path)
                                                 nb_files = [file for file in files if file.endswith('nb')]
@@ -212,16 +235,33 @@ def writeTXT(example_path):
                                                         resetTXT()
                                                         sys.stderr.write(f"[Error] Customized model {input2filename(input2model(model_item.strip()))} not found. Please check your sketch folder again.\n")
                                                         sys.exit(1)
-                                        # default add in at least one model for NN examples
-                                        if input2model(model_item.strip()) != None:
-                                            if dupCheckTXT(model_item.strip()):
-                                                updateTXT(input2model(model_item.strip()))
+                    
+                    for i in range(int(len(model_list)/3 - 1)):
+                        n = 3 * (i + 1)
+                        for j in range(3):
+                            if model_list[j] is None and model_list[j + n] is not None:
+                                model_list[j] = model_list[j + n] 
+                    
+                    for i in range(3):
+                        if model_list[i] is not None:
+                            updateTXT(model_list[i])
+                        else:
+                            updateTXT("NA")
 
                     updateTXT("-----------------------------------")
                     updateTXT("Current NN header file(s): ")
+                    line_list = []
                     for line in lines:
                         if line.startswith(keyword_header) and "NN" in line:
-                            updateTXT(line.replace('"','').split()[-1])
+                            line_list.append(line.replace('"','').split()[-1])
+                    for i in range(3):
+                        if model_list[i] is not None:
+                            if input2header(model_list[i]) in line_list:
+                                updateTXT(input2header(model_list[i]))
+                            else:
+                                updateTXT("NA")
+                        else:
+                            updateTXT("NA")
 
                     updateTXT("-------------------------------------")
                     updateTXT("Current ino contains header file(s): ")
