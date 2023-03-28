@@ -4,7 +4,7 @@
 # For Example: whether scrfd and mobilefacenet models have been selected while running NNFaceRecognition Example
 # ------------------------------------------------------
 # To generate executable
-# python -m PyInstaller  --onefile .\ino_validation.py 
+# python -m PyInstaller  --onefile --name ino_validation_windows.exe .\ino_validation.py 
 # python3 -m PyInstaller --onefile ./ino_validation.py
 #                        -w: no terminal required 
 # ------------------------------------------------------
@@ -16,7 +16,7 @@ import sys
 import json
 from sys import platform
 
-DEBUG = 1
+DEBUG = 0
 def debug_print(message):
     if DEBUG:
         print(message)
@@ -235,18 +235,20 @@ def writeTXT(example_path):
                                                         resetTXT()
                                                         sys.stderr.write(f"[Error] Customized model {input2filename(input2model(model_item.strip()))} not found. Please check your sketch folder again.\n")
                                                         sys.exit(1)
-                    
-                    for i in range(int(len(model_list)/3 - 1)):
-                        n = 3 * (i + 1)
-                        for j in range(3):
-                            if model_list[j] is None and model_list[j + n] is not None:
-                                model_list[j] = model_list[j + n] 
-                    
-                    for i in range(3):
-                        if model_list[i] is not None:
-                            updateTXT(model_list[i])
-                        else:
+                    if not model_list:
+                        for i in range(3):
                             updateTXT("NA")
+                    else:
+                        for i in range(int(len(model_list)/3 - 1)):
+                            n = 3 * (i + 1)
+                            for j in range(3):
+                                if model_list[j] is None and model_list[j + n] is not None:
+                                    model_list[j] = model_list[j + n] 
+                        for i in range(3):
+                            if model_list[i] is not None:
+                                updateTXT(model_list[i])
+                            else:
+                                updateTXT("NA")
 
                     updateTXT("-----------------------------------")
                     updateTXT("Current NN header file(s): ")
@@ -254,14 +256,18 @@ def writeTXT(example_path):
                     for line in lines:
                         if line.startswith(keyword_header) and "NN" in line:
                             line_list.append(line.replace('"','').split()[-1])
-                    for i in range(3):
-                        if model_list[i] is not None:
-                            if input2header(model_list[i]) in line_list:
-                                updateTXT(input2header(model_list[i]))
+                    if not model_list:
+                        for i in range(3):
+                            updateTXT("NA")
+                    else:
+                        for i in range(3):
+                            if model_list[i] is not None:
+                                if input2header(model_list[i]) in line_list:
+                                    updateTXT(input2header(model_list[i]))
+                                else:
+                                    updateTXT("NA")
                             else:
                                 updateTXT("NA")
-                        else:
-                            updateTXT("NA")
 
                     updateTXT("-------------------------------------")
                     updateTXT("Current ino contains header file(s): ")
