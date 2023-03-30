@@ -59,7 +59,7 @@ elif platform == "linux" or platform == "linux2":
     filepath_txt = sys.argv[2] + '/misc/' + filename_txt
 elif platform == "darwin":
     # OS X
-    arduino15_path = os.path.expanduser("/Users/" + os.getlogin() + "/Library/Arduino15")
+    arduino15_path = os.path.expanduser(os.path.expanduser('~') + "/Library/Arduino15")
     ambpro2_path = arduino15_path + "/packages/realtek/hardware/AmebaPro2/"
     sdk_version = os.listdir(ambpro2_path)[1]
     dest_path = ambpro2_path + "/" + sdk_version + "/variants/common_nn_models/"
@@ -239,7 +239,7 @@ def writeJSON(example_path):
     for file_json in os.listdir(sys.argv[1]):
         if file_json.endswith(".json") and "build" in file_json:
             with open(os.path.join(sys.argv[1], file_json), "r+") as file:
-                with open(example_path, 'r+') as file:
+                with open(example_path, 'r') as file:
                     sktech_path  = example_path + os.path.sep + ".."
                     lines = file.readlines()
                     for line in lines:
